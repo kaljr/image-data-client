@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="main.css" rel="stylesheet">
+</head>
+<body>
+    <div class="top-section">
+        <div class="top-section-grid-item flex-center">
+            <canvas class="zoom-canvas"></canvas>
+        </div>
+        <div class="file-info top-section-grid-item">
+            <label for="file-input" class="custom-file-input button">
+                Open Files ...
+            </label>
+            <input type="file" id="file-input" class="file-input" accept="image/png, image/jpeg" multiple>
+            <ul class="picture-list top-section-grid-item">
+                <div class="welcome-message">
+                    This is a tool for selecting image pixels for neural network training.
+                    <ol>
+                        <li>Select some files to get started</li>
+                        <li>Choose the image you want to edit points for</li>
+                        <li>Click some points on the image</li>
+                        <li>Save your data to a file</li>
+                    </ol>
+                </div>
+            </ul>
+        </div>
+        <ol class="selected-points top-section-grid-item"></ol>
+        <div class="top-section-grid-item">
+            <a class="save-to-file button" target="_blank" download="file.txt">Save to File</a>
+            <span class="file-contents"></span>
+        </div>
+        <div class="coordinates top-section-grid-item">
+            <div>X: <span class="x-coord"></span></div>
+            <div>Y: <span class="y-coord"></span></div>
+        </div>
+    </div>
+    <div class="picture-canvas-container">
+        <canvas class="picture-canvas" width="0" height="0"></canvas>
+    </div>
+</body>
+<script src="main.js"></script>
+</html>
