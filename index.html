@@ -16,17 +16,7 @@
                 Open Files ...
             </label>
             <input type="file" id="file-input" class="file-input" accept="image/png, image/jpeg" multiple>
-            <ul class="picture-list top-section-grid-item">
-                <div class="welcome-message">
-                    This is a tool for selecting image pixels for neural network training.
-                    <ol>
-                        <li>Select some files to get started</li>
-                        <li>Choose the image you want to edit points for</li>
-                        <li>Click some points on the image</li>
-                        <li>Save your data to a file</li>
-                    </ol>
-                </div>
-            </ul>
+            <ul class="picture-list"></ul>
         </div>
         <ol class="selected-points top-section-grid-item"></ol>
         <div class="top-section-grid-item">
@@ -40,7 +30,17 @@
     </div>
     <div class="bottom-section">
         <div class="picture-canvas-container">
+            <div class="welcome-message">
+                This is a tool for selecting image pixels for neural network training.
+                <ol>
+                    <li>Select some files to get started</li>
+                    <li>Choose the image you want to edit points for</li>
+                    <li>Click some points on the image</li>
+                    <li>Save your data to a file</li>
+                </ol>
+            </div>
             <canvas class="picture-canvas" width="0" height="0"></canvas>
+            <canvas class="picture-canvas-overlay" width="0" height="0"></canvas>
         </div>
     </div>
 </body>

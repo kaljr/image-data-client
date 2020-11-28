@@ -7,17 +7,19 @@ const qS = document.querySelector.bind(document);
 const $fileInput = qS('.file-input');
 const $pictureList = qS('.picture-list');
 const $pictureCanvas = qS('.picture-canvas');
+const $pictureCanvasOverlay = qS('.picture-canvas-overlay');
 const $zoomCanvas = qS('.zoom-canvas');
 const $xCoord = qS('.x-coord');
 const $yCoord = qS('.y-coord');
 const $selectedPts = qS('.selected-points');
 const $fileContents = qS('.file-contents');
 const $bottomSection = qS('.bottom-section');
-
+const $welcomeMessage = qS('.welcome-message');
 
 
 // Canvas Contexts
 const ctx = $pictureCanvas.getContext('2d');
+const ctxOverlay = $pictureCanvasOverlay.getContext('2d');
 const ctxZoom = $zoomCanvas.getContext('2d');
 
 
@@ -93,6 +95,8 @@ currentImgSrcStore.setSubscribers([
     updatePictureCanvasView
 ]);
 
+const currentImgSizeStore = new Store({currentImgSize: {width: 0, height: 0}});
+// TODO: add the image size to the one of the views and subscribe here
 
 // Event Listeners
 $fileInput.addEventListener('change', handleFiles, false);
@@ -103,6 +107,7 @@ $pictureList.addEventListener('click', handleThumbnailClick);
 
 // Event Handlers
 function handleFiles(e) {
+    $welcomeMessage.style.display = 'none';
     fileStore.updateData({files: e.target.files});
 }
 
@@ -116,6 +121,8 @@ function handlePictureMouseover(e) {
 
     currentPtStore.updateData({currentPt: {x: x, y: y}});
     clearCanvas($zoomCanvas, ctxZoom)
+
+    drawGuidelines(ctxOverlay, {x: x,  y: y});
 
     // zoomMethod1(ctxZoom, x, y);
     zoomMethod2(ctx, ctxZoom, x, y);
@@ -222,6 +229,9 @@ async function drawImageToCanvas(imgSrc, $targetCanvas, targetContext) {
         img.onload = function() {
             $targetCanvas.width = img.width;
             $targetCanvas.height = img.height;
+            $pictureCanvasOverlay.width = img.width;
+            $pictureCanvasOverlay.height = img.height;
+            currentImgSizeStore.updateData({currentImgSize: {width: img.width, height: img.height}});
             targetContext.drawImage(img, 0, 0);
             img.style.display = 'none';
             resolve();
@@ -307,12 +317,28 @@ function drawSelectedPts(targetCtx) {
     });
 }
 
-// TODO: implement and call this to draw lines out from the cursor on mouseover
 function drawGuidelines(targetCtx, points) {
+    const CENTER_OFFSET = 5;
+    const currentImgSize = currentImgSizeStore.getData('currentImgSize');
+
+    clearCanvas($pictureCanvasOverlay, ctxOverlay);
+
     targetCtx.beginPath();
-    targetCtx.lineStyle = 'red';
-    targetCtx.moveTo(points.x - 5, points.y);
-    targetCtx.lineTo(0, y);
+    targetCtx.strokeStyle = 'red';
+    targetCtx.lineWidth = 1;
+
+    targetCtx.moveTo(points.x - CENTER_OFFSET, points.y);
+    targetCtx.lineTo(0, points.y);
+
+    targetCtx.moveTo(points.x + CENTER_OFFSET, points.y);
+    targetCtx.lineTo(currentImgSize.width, points.y);
+
+    targetCtx.moveTo(points.x, points.y + CENTER_OFFSET);
+    targetCtx.lineTo(points.x, currentImgSize.height);
+
+    targetCtx.moveTo(points.x, points.y - CENTER_OFFSET);
+    targetCtx.lineTo(points.x, 0);
+
     targetCtx.stroke();
 }
 

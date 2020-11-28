@@ -46,6 +46,11 @@ a:hover {
     list-style: none;
     padding: 15px;
     width: 70%;
+    overflow: auto;
+    position: absolute;
+    top: 45px;
+    left: 0;
+    height: 64%;
 }
 
 .picture-list img {
@@ -62,11 +67,25 @@ a:hover {
 }
 
 .picture-canvas {
+    /* cursor: crosshair; */
+    cursor: none;
+    margin: 25px;
+    /* padding on the right/bottom to make selecting pixels easier on those edges */
+    padding-right: 5px;
+    padding-bottom: 5px;
+}
+
+.picture-canvas-overlay {
     cursor: crosshair;
     margin: 25px;
     /* padding on the right/bottom to make selecting pixels easier on those edges */
     padding-right: 5px;
     padding-bottom: 5px;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    cursor: none;
 }
 
 .top-section {
@@ -81,6 +100,7 @@ a:hover {
     min-width: 20%;
     max-height: 210px;
     overflow-y: scroll;
+    position: relative;
 }
 
 .selected-points {
@@ -171,6 +191,7 @@ a:hover {
     color: var(--purple-text);
     position: absolute;
     width: 50%;
+    transform: translate(50%, 50%);
 }
 
 .welcome-message ol {
