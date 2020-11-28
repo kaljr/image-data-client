@@ -12,6 +12,8 @@ const $xCoord = qS('.x-coord');
 const $yCoord = qS('.y-coord');
 const $selectedPts = qS('.selected-points');
 const $fileContents = qS('.file-contents');
+const $bottomSection = qS('.bottom-section');
+
 
 
 // Canvas Contexts
@@ -109,8 +111,8 @@ function handlePictureMouseover(e) {
 
     // get mouse position over canvas element
     // floor in order to handle when browser is zoomed (it can add decimals to pixel values)
-    const y = Math.floor(e.pageY - target.offsetTop + target.parentElement.scrollTop - 1);
-    const x = Math.floor(e.pageX - target.offsetLeft + target.parentElement.scrollLeft - 1);
+    const y = Math.floor(e.pageY - $bottomSection.offsetTop - target.offsetTop + target.parentElement.scrollTop - 1);
+    const x = Math.floor(e.pageX - $bottomSection.offsetLeft - target.offsetLeft + target.parentElement.scrollLeft - 1);
 
     currentPtStore.updateData({currentPt: {x: x, y: y}});
     clearCanvas($zoomCanvas, ctxZoom)
@@ -303,6 +305,15 @@ function drawSelectedPts(targetCtx) {
         targetCtx.fillStyle = SELECTED_PT_COLOR;
         targetCtx.fill();
     });
+}
+
+// TODO: implement and call this to draw lines out from the cursor on mouseover
+function drawGuidelines(targetCtx, points) {
+    targetCtx.beginPath();
+    targetCtx.lineStyle = 'red';
+    targetCtx.moveTo(points.x - 5, points.y);
+    targetCtx.lineTo(0, y);
+    targetCtx.stroke();
 }
 
 function clearCanvas($targetCanvas, targetContext) {

@@ -8,10 +8,10 @@
 </head>
 <body>
     <div class="top-section">
-        <div class="top-section-grid-item flex-center">
+        <div class="top-section-grid-item flex-center overflow-hidden">
             <canvas class="zoom-canvas"></canvas>
         </div>
-        <div class="file-info top-section-grid-item">
+        <div class="file-info top-section-grid-item overflow-hidden">
             <label for="file-input" class="custom-file-input button">
                 Open Files ...
             </label>
@@ -38,8 +38,10 @@
             <div>Y: <span class="y-coord"></span></div>
         </div>
     </div>
-    <div class="picture-canvas-container">
-        <canvas class="picture-canvas" width="0" height="0"></canvas>
+    <div class="bottom-section">
+        <div class="picture-canvas-container">
+            <canvas class="picture-canvas" width="0" height="0"></canvas>
+        </div>
     </div>
 </body>
 <script src="main.js"></script>

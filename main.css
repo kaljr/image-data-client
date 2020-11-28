@@ -19,6 +19,14 @@
 body {
     background: var(--theme-darkest);
     font-family: 'Courier New', Courier, monospace, Verdana, sans-serif;
+    margin: 0;
+    position: relative;
+    height: auto;
+    min-height: 100vh;
+    overflow: hidden;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 li {
@@ -65,7 +73,6 @@ a:hover {
     background: var(--theme-darkest);
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    position: sticky;
     top: 0;
     overflow: hidden;
 }
@@ -140,9 +147,18 @@ a:hover {
     grid-column-end: 5;
 }
 
+.bottom-section {
+    display: flex;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
 .picture-canvas-container {
-    max-width: 100%;
-    overflow: scroll;
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+    position: absolute;
 }
 
 .flex-center {
@@ -178,4 +194,8 @@ a:hover {
 .x-coord,
 .y-coord {
     margin-right: 1em;
+}
+
+.overflow-hidden {
+    overflow: hidden;
 }
