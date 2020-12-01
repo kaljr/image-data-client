@@ -15,6 +15,10 @@ const $selectedPts = qS('.selected-points');
 const $fileContents = qS('.file-contents');
 const $bottomSection = qS('.bottom-section');
 const $welcomeMessage = qS('.welcome-message');
+const $brightnessHandle = qS('.brightness-handle');
+const $contrastHandle = qS('.contrast-handle');
+const $imageSizeWidth = qS('.image-size-width');
+const $imageSizeHeight = qS('.image-size-height');
 
 
 // Canvas Contexts
@@ -48,7 +52,9 @@ class Store {
             }
         }
 
-        this.dispatchToViews();
+        if (!dataObj.hasOwnProperty('skip_dispatch')) {
+            this.dispatchToViews();
+        }
     }
 
     getData(key) {
@@ -78,7 +84,7 @@ fileStore.setSubscribers([
     updateFileListView
 ]);
 
-const selectedPtsStore = new Store({selectedPts: {}});
+const selectedPtsStore = new Store({selectedPts: []});
 selectedPtsStore.setSubscribers([
     updateSelectedPtsView,
     updateDataFileView,
@@ -95,15 +101,31 @@ currentImgSrcStore.setSubscribers([
     updatePictureCanvasView
 ]);
 
+const currentImgElStore = new Store({$currentImgEl: null});
+
+const currentImgMetaStore = new Store({brightness: 100, contrast: 100});
+currentImgMetaStore.setSubscribers([
+    updateImageFiltersView
+]);
+
 const currentImgSizeStore = new Store({currentImgSize: {width: 0, height: 0}});
-// TODO: add the image size to the one of the views and subscribe here
+currentImgSizeStore.setSubscribers([
+    updateImageSizeView
+]);
+
+const draggingCtrlStore = new Store({dragging: false, $draggingEl: null, attributeName: null});
 
 // Event Listeners
 $fileInput.addEventListener('change', handleFiles, false);
 $pictureCanvas.addEventListener('mousemove', handlePictureMouseover);
+$pictureCanvas.addEventListener('mouseout', handlePictureMouseout);
 $pictureCanvas.addEventListener('click', handlePictureClick);
 $pictureList.addEventListener('click', handleThumbnailClick);
 
+$brightnessHandle.addEventListener('mousedown', handleSliderDown);
+$contrastHandle.addEventListener('mousedown', handleSliderDown);
+document.addEventListener('mousemove', handleSliderMove);
+document.addEventListener('mouseup', handleSliderUp);
 
 // Event Handlers
 function handleFiles(e) {
@@ -123,17 +145,21 @@ function handlePictureMouseover(e) {
     clearCanvas($zoomCanvas, ctxZoom)
 
     drawGuidelines(ctxOverlay, {x: x,  y: y});
+    drawSelectedPts(ctxOverlay);
 
     // zoomMethod1(ctxZoom, x, y);
     zoomMethod2(ctx, ctxZoom, x, y);
+}
+
+function handlePictureMouseout() {
+    clearCanvas($pictureCanvasOverlay, ctxOverlay);
 }
 
 function handlePictureClick(e) {
     let existingPts = selectedPtsStore.getData('selectedPts');
     const currentPt = currentPtStore.getData('currentPt');
 
-    // index sets requirement that points be unique
-    existingPts[currentPt.x.toString() + currentPt.y.toString()] = [currentPt.x, currentPt.y]
+    existingPts.push(currentPt);
     selectedPtsStore.updateData({selectedPts: existingPts});
 }
 
@@ -142,14 +168,69 @@ async function handleThumbnailClick(e) {
 
     if (fileIdx >= 0) {
         fileStore.updateData({selectedFileIdx: fileIdx});
-        selectedPtsStore.updateData({selectedPts: {}});
+        selectedPtsStore.updateData({selectedPts: []});
+
         await readImage(fileStore.getData('files')[fileIdx]);
+
+        $brightnessHandle.style.left = 'initial';
+        $contrastHandle.style.left = 'initial';
     }
+}
+
+function handleSliderDown(e) {
+    draggingCtrlStore.updateData({dragging: true, $draggingEl: e.target, attributeName: e.target.dataset.name});
+}
+
+function handleSliderMove(e) {
+    const {dragging, $draggingEl, attributeName} = draggingCtrlStore.getData();
+
+    if (dragging && $draggingEl) {
+        // set new slider position
+        const indicatorWidth = parseInt(getComputedStyle($brightnessHandle).width.replace('px', '')) / 2;
+        const sliderWidth = $draggingEl.parentElement.offsetWidth;
+        const sliderStartX = $draggingEl.parentElement.offsetLeft;
+        const sliderEndX = sliderStartX + $draggingEl.parentElement.offsetWidth;
+        const mouseX = e.pageX;
+
+        const indicatorX = e.pageX - sliderStartX - indicatorWidth;
+        const leftX = Math.min(Math.max(indicatorX, 0 - indicatorWidth), sliderWidth - indicatorWidth); // limit slider range 0 < x < sliderWidth
+
+        $draggingEl.style.left = leftX + 'px';
+
+        // set new value of brightness/contrast
+        // brightness and contrast vary on 0-200 scale with 100 being original/neutral
+        const incrementLength = 200 / sliderWidth;
+        const percentSet = incrementLength * leftX;
+
+        let newAttrData = {};
+        newAttrData[attributeName] = percentSet;
+        currentImgMetaStore.updateData(newAttrData);
+    }
+}
+
+function handleSliderUp(e) {
+    const dragging = draggingCtrlStore.getData('dragging');
+
+    if (dragging) {
+        draggingCtrlStore.updateData({dragging: false, $draggingEl: null});
+    }
+}
+
+function handleExplicitPtClick(e) {
+    e.preventDefault();
+
+    const selectedPts = selectedPtsStore.getData('selectedPts');
+    const x = parseInt(e.target.elements.x.value);
+    const y = parseInt(e.target.elements.y.value);
+
+    selectedPts.push({x: x, y: y});
+    selectedPtsStore.updateData({selectedPts: selectedPts});
 }
 
 
 // View Updaters
-function updateFileListView(fileData) {
+function updateFileListView() {
+    const fileData = fileStore.getData();
     const files = fileData.files;
     const selectedFile = fileData.selectedFileIdx;
 
@@ -169,37 +250,66 @@ function updateFileListView(fileData) {
     }
 }
 
-function updateCoordinatesView(coords) {
-    $xCoord.innerText = coords.currentPt.x;
-    $yCoord.innerText = coords.currentPt.y;
+function updateCoordinatesView() {
+    const coords = currentPtStore.getData('currentPt');
+
+    $xCoord.innerText = coords.x;
+    $yCoord.innerText = coords.y;
 }
 
-async function updatePictureCanvasView(imgData) {
-    const img = imgData.currentImgSrc;
+async function updatePictureCanvasView() {
+    const img = currentImgSrcStore.getData('currentImgSrc');
 
     clearCanvas($pictureCanvas, ctx);
     await drawImageToCanvas(img, $pictureCanvas, ctx);
 }
 
-async function updateSelectedPtsView(selectedPtsData) {
-    const selectedPts = selectedPtsData.selectedPts;
+function updateSelectedPtsView() {
+    const selectedPts = selectedPtsStore.getData('selectedPts');
 
     $selectedPts.innerHTML = ''; // clear all pts
 
-    for (let pt in selectedPts) {
-        let newPtEl = createPtElement(pt);
-        $selectedPts.appendChild(newPtEl)
-    }
+    selectedPts.forEach((pt, idx) => {
+        const $newPtEl = createPtElement(pt, idx);
+        $selectedPts.appendChild($newPtEl);
+    });
 
-    await drawImageToCanvas(currentImgSrcStore.getData('currentImgSrc'), $pictureCanvas, ctx);
-    drawSelectedPts(ctx);
+    clearCanvas($pictureCanvasOverlay, ctxOverlay);
+    drawSelectedPts(ctxOverlay);
 }
 
-function updateDataFileView(data) {
-    const dataAsString = JSON.stringify(data.selectedPts, null, 2);
+function updateImageFiltersView() {
+    const $imgEl = currentImgElStore.getData('$currentImgEl');
+    const {brightness, contrast} = currentImgMetaStore.getData();
+
+    ctx.filter = (`brightness(${brightness}%) contrast(${contrast}%)`)
+    ctx.drawImage($imgEl, 0, 0);
+}
+
+function updateDataFileView() {
+    const selectedPts = selectedPtsStore.getData('selectedPts');
+    const dataAsString = JSON.stringify(selectedPts, null, 2);
     $fileContents.innerHTML = `<pre class="formatted-data">${dataAsString}</pre>`;
 }
 
+function updateSliderViews() {
+    const {brightness, contrast} = currentImgMetaStore.getData();
+
+    const sliderPositionBrightness = brightness === 100 ? 'initial' : brightness + 'px';
+    const sliderPositionContrast = contrast === 100 ? 'initial' : contrast + 'px';
+
+    $brightnessHandle.style.left = sliderPositionBrightness;
+    $contrastHandle.style.left = sliderPositionContrast;
+}
+
+function updateImageSizeView() {
+    const {width, height} = currentImgSizeStore.getData('currentImgSize');
+
+    $imageSizeHeight.innerHTML = `${height}h`;
+    $imageSizeWidth.innerHTML = `${width}w`;
+
+
+}
 
 // Functions
 function readImage(file) {
@@ -226,12 +336,19 @@ async function drawImageToCanvas(imgSrc, $targetCanvas, targetContext) {
         img.crossOrigin = 'anonymous';
         img.src = imgSrc;
 
+        // store this so that filters can be applied without rebuiling the element and reloading the img src
+        currentImgElStore.updateData({'$currentImgEl': img});
+
         img.onload = function() {
             $targetCanvas.width = img.width;
             $targetCanvas.height = img.height;
             $pictureCanvasOverlay.width = img.width;
             $pictureCanvasOverlay.height = img.height;
+
             currentImgSizeStore.updateData({currentImgSize: {width: img.width, height: img.height}});
+            currentImgMetaStore.updateData({brightness: 100, contrast: 100, skip_dispatch: true});
+
+            targetContext.filter = (`brightness(100%) contrast(100%)`);
             targetContext.drawImage(img, 0, 0);
             img.style.display = 'none';
             resolve();
@@ -277,25 +394,24 @@ function zoomMethod2(ctx, ctxZoom, x, y) {
     ctxZoom.stroke();
 }
 
-function createPtElement(pt) {
+function createPtElement(pt, idx) {
     let newPtEl = createEl('li');
-    const selectedPts = selectedPtsStore.getData('selectedPts');
 
     newPtEl.innerHTML = `
         <div class="selected-pt">
-            <span class="selected-pt-x">x: ${selectedPts[pt][0]}</span>
-            <span class="selected-pt-y">y: ${selectedPts[pt][1]}</span>
-            <span class="selected-pt-delete" onClick=removeSelectedPt("${pt}")></span>
+            <span class="selected-pt-x">x: ${pt.x}</span>
+            <span class="selected-pt-y">y: ${pt.y}</span>
+            <span class="selected-pt-delete" onClick=removeSelectedPt("${idx}")></span>
         </div>
     `
 
     return newPtEl
 }
 
-function removeSelectedPt(pt) {
+function removeSelectedPt(ptIdx) {
     const selectedPts = selectedPtsStore.getData('selectedPts');
 
-    delete selectedPts[pt];
+    selectedPts.splice(ptIdx, 1);
     selectedPtsStore.updateData({selectedPts: selectedPts})
 }
 
@@ -305,13 +421,9 @@ function drawSelectedPts(targetCtx) {
 
     targetCtx.beginPath();
 
-    for (let pt in selectedPts) {
-        pts[pts.length] = selectedPts[pt]
-    }
-
-    pts.forEach((pt, i) => {
-        targetCtx.moveTo(pt[0], pt[1]);
-        targetCtx.arc(pt[0], pt[1], SELECTED_PT_RADIUS, 0, 2 * Math.PI);
+    selectedPts.forEach((pt, i) => {
+        targetCtx.moveTo(pt.x, pt.y);
+        targetCtx.arc(pt.x, pt.y, SELECTED_PT_RADIUS, 0, 2 * Math.PI);
         targetCtx.fillStyle = SELECTED_PT_COLOR;
         targetCtx.fill();
     });
