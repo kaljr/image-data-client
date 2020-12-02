@@ -87,8 +87,7 @@ fileStore.setSubscribers([
 const selectedPtsStore = new Store({selectedPts: []});
 selectedPtsStore.setSubscribers([
     updateSelectedPtsView,
-    updateDataFileView,
-    updateSaveFileLinkView
+    updateDataFileView
 ]);
 
 const currentPtStore = new Store({currentPt: {x: 0, y: 0}});
@@ -458,17 +457,27 @@ function clearCanvas($targetCanvas, targetContext) {
     targetContext.clearRect(0, 0, $targetCanvas.width, $targetCanvas.height);
 }
 
+function savePtsToFile() {
+    const ptsData = selectedPtsStore.getData('selectedPts');
 
-function updateSaveFileLinkView(data) {
+    // get name of the current image to use for the data file
     const filesData = fileStore.getData();
     const selectedFilename = filesData.files[filesData.selectedFileIdx].name;
     const newFilename = (selectedFilename.substr(0, selectedFilename.lastIndexOf('.')) || selectedFilename) + '.json';
-    const dataAsString = JSON.stringify(data.selectedPts, null, 2);
     
-    const properties = {type: 'text/plain'}; // Specify the file mime-type.
-    const file = new File([dataAsString], newFilename, properties);
-    const url = URL.createObjectURL(file);
+    const dataAsString = JSON.stringify(ptsData, null, 2);
+    const contentType = {type: 'text/plain'};
 
-    qS('.save-to-file').href = url;
+    downloadToFile(dataAsString, newFilename, contentType);
 }
 
+function downloadToFile(content, filename, contentType) {
+    const a = createEl('a');
+    const file = new Blob([content], {type: contentType});
+
+    a.href = URL.createObjectURL(file);
+    a.download = filename;
+    a.click();
+
+    URL.revokeObjectURL(a.href);
+}

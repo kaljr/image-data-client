@@ -22,12 +22,12 @@
             <form class="explicit-pt-creation" onsubmit="handleExplicitPtClick(event)">
                 <input type="number" name="x" value="-100">
                 <input type="number" name="y" value="-100">
-                <button class="explicit-pt-button" type="submit">+</button>
+                <button class="explicit-pt-button button" type="submit">+</button>
             </form>
             <ol class="selected-points"></ol>
         </div>
-        <div class="top-section-grid-item">
-            <a class="save-to-file button" target="_blank" download="file.txt">Save to File</a>
+        <div class="top-section-grid-item file-save">
+            <div class="save-to-file button" onclick="savePtsToFile()">Save to File</div>
             <span class="file-contents"></span>
         </div>
         <div class="info-bar">
