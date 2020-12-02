@@ -113,7 +113,7 @@ a:hover {
 .selected-points li {
     position: relative;
     list-style: none;
-    width: 60%;
+    width: 50%;
 }
 
 .selected-pt-x,
