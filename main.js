@@ -29,8 +29,8 @@ const ctxZoom = $zoomCanvas.getContext('2d');
 
 // Constants
 const ZOOM = 18;
-const ZOOM_HORIZONTAL = 11;
-const ZOOM_VERTICAL = 11;
+const ZOOM_HORIZONTAL = 30;
+const ZOOM_VERTICAL = 30;
 const SELECTED_PT_COLOR = 'rgba(40,240,40,1)';
 const SELECTED_PT_RADIUS= 4;
 

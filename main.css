@@ -50,7 +50,7 @@ a:hover {
     position: absolute;
     top: 45px;
     left: 0;
-    height: 64%;
+    height: 81%;
 }
 
 .picture-list img {
@@ -91,14 +91,14 @@ a:hover {
 .top-section {
     background: var(--theme-darkest);
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 2fr 2fr 1fr 1fr;
     top: 0;
     overflow: hidden;
 }
 
 .top-section-grid-item {
     min-width: 20%;
-    max-height: 210px;
+    max-height: 380px;
     overflow-y: scroll;
     position: relative;
 }
@@ -113,7 +113,7 @@ a:hover {
 .selected-points li {
     position: relative;
     list-style: none;
-    width: 50%;
+    width: 70%;
 }
 
 .selected-pt-x,
